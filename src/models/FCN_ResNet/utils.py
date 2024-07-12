@@ -1,16 +1,14 @@
 import torch
 import numpy as np
 import os
-from dotenv import load_dotenv
 import torch.nn as nn
 import torch.optim as optim
 from model import semantic_model
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 
-load_dotenv()
 
 EPOCHS = 100
-CHECKPOINT_DIR = os.getenv("DENDERITES_CHECKPOINT_DIR")
+CHECKPOINT_DIR = 'checkpoints_dendrites'
 CHECKPOINT_PATH = os.path.join(CHECKPOINT_DIR, "model_checkpoint.pth")
 METRICS_PATH = os.path.join(CHECKPOINT_DIR, "metrics.npz")
 LOG_PATH = os.path.join(CHECKPOINT_DIR, "metrics_log.log")
