@@ -12,11 +12,14 @@ git clone https://github.com/sahil-sharma-50/Panoptic-Segmentation-on-Dendrites-
   <li>Semantic Segmentation Model for Dendrites: <a href='https://faubox.rrze.uni-erlangen.de/getlink/fi7iUL8cVWUsA5w9ZFLj2A/dendrite_model.pt'>FCN_ResNet50</a></li>
 </ol>
 
+`For example: Save these models in .\src\panoptic_inference`
+
 ### Step 3: Install the `requirements.txt` file:
 ```
 pip install -r requirements.txt
 ```
 ### Step 4: Run panoptic_inference.py
 ```
-python .\src\panoptic_inference\panoptic_inference.py
+cd .\src\panoptic_inference\
+python panoptic_inference.py
 ```
