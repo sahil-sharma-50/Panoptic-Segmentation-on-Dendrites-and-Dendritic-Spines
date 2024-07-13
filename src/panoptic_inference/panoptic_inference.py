@@ -1,41 +1,54 @@
-from models.MaskRCNN.model import instance_model
-from models.FCN_ResNet.model import semantic_model
-
 import numpy as np
-from PIL import Image
-import matplotlib.pyplot as plt
-import cv2
 import torch
-from torchvision import models
-from torchvision.models.segmentation import fcn_resnet50
-from albumentations.pytorch import ToTensorV2
+from PIL import Image
+import cv2
 import albumentations as A
+from albumentations.pytorch import ToTensorV2
 from torchvision.transforms import functional as F
-from matplotlib.colors import ListedColormap
-from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
+import argparse
+import os
+from tqdm import tqdm
 from torchvision.models.detection import MaskRCNN_ResNet50_FPN_Weights
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
+from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
+from torchvision.models.segmentation import fcn_resnet50
+import torchvision.models as models
 import random
 
 
-device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+def get_device():
+    return torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-instance_model = instance_model(num_classes=2)
-semantic_model = semantic_model(num_classes=1)
+
+def get_model_instance_segmentation(num_classes):
+    weights = MaskRCNN_ResNet50_FPN_Weights.COCO_V1
+    model = models.detection.maskrcnn_resnet50_fpn(weights=weights)
+    in_features = model.roi_heads.box_predictor.cls_score.in_features
+    model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
+    in_features_mask = model.roi_heads.mask_predictor.conv5_mask.in_channels
+    hidden_layer = 512
+    model.roi_heads.mask_predictor = MaskRCNNPredictor(
+        in_features_mask, hidden_layer, num_classes
+    )
+    return model
 
 
 def load_models(instance_model_path, semantic_model_path, device):
-    model_instance = instance_model.load_state_dict(
-        torch.load(instance_model_path, map_location=device)
+    instance_model = get_model_instance_segmentation(num_classes=2)
+    instance_model.load_state_dict(
+        torch.load(instance_model_path, map_location=device), strict=False
     )
-    model_instance.to(device)
-    model_instance.eval()
+    instance_model.to(device)
+    instance_model.eval()
 
-    model_semantic.load_state_dict(torch.load(semantic_model_path), strict=False)
-    model_semantic.to(device)
-    model_semantic.eval()
+    semantic_model = fcn_resnet50(weights=None, num_classes=1)
+    semantic_model.load_state_dict(
+        torch.load(semantic_model_path, map_location=device), strict=False
+    )
+    semantic_model.to(device)
+    semantic_model.eval()
 
-    return model_instance, model_semantic
+    return instance_model, semantic_model
 
 
 def run_instance_inference(model, device, image_path, threshold=0.5):
@@ -48,8 +61,7 @@ def run_instance_inference(model, device, image_path, threshold=0.5):
     img = Image.open(image_path).convert("RGB")
     img = np.array(img)
     transformed = transform(image=img)
-    img_tensor = transformed["image"]
-    img_tensor = img_tensor.unsqueeze(0).to(device)
+    img_tensor = transformed["image"].unsqueeze(0).to(device)
     with torch.no_grad():
         prediction = model(img_tensor)
     pred_boxes = prediction[0]["boxes"].cpu().numpy()
@@ -66,10 +78,9 @@ def run_semantic_inference(model, device, image_path):
     image = F.to_tensor(input_image.convert("RGB")).unsqueeze(0).to(device)
     with torch.no_grad():
         output = model(image)["out"]
-    semantic_mask_bin = (torch.sigmoid(output).squeeze().cpu().numpy() > 0.1).astype(
+    return input_image, (torch.sigmoid(output).squeeze().cpu().numpy() > 0.1).astype(
         np.uint8
     )
-    return input_image, semantic_mask_bin
 
 
 def random_color():
@@ -81,75 +92,72 @@ def create_panoptic_mask_with_colors(
 ):
     height, width = semantic_mask.shape
     panoptic_mask = np.zeros((height, width, 3), dtype=np.uint8)
-    semantic_mask_bin = (semantic_mask > threshold).astype(np.uint8)
-    panoptic_mask[:] = (0, 0, 0)
-    panoptic_mask[semantic_mask_bin == 1] = (0, 255, 0)
+    panoptic_mask[semantic_mask == 1] = (0, 255, 0)
 
-    current_label = 2
-    for idx, (mask, score) in enumerate(zip(instance_masks, scores)):
+    for mask, score in zip(instance_masks, scores):
         if score > threshold:
             mask_bin = mask.squeeze() > threshold
-            unique_color = (
-                np.random.randint(0, 255),
-                np.random.randint(0, 255),
-                np.random.randint(0, 255),
-            )
+            unique_color = random_color()
             panoptic_mask[mask_bin] = unique_color
             contours, _ = cv2.findContours(
                 mask_bin.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
             )
             cv2.drawContours(panoptic_mask, contours, -1, (255, 0, 0), 1)
-            current_label += 1
     return panoptic_mask
 
 
-def plot_panoptic_results(input_image, spine_path, dendrite_path, panoptic_mask):
-    plt.figure(figsize=(15, 10))
+def main(instance_model_path, semantic_model_path, input_images_folder, output_folder):
+    os.makedirs(output_folder, exist_ok=True)
+    device = get_device()
+    instance_model, semantic_model = load_models(
+        instance_model_path, semantic_model_path, device
+    )
 
-    plt.subplot(1, 4, 1)
-    plt.imshow(Image.open(input_image))
-    plt.title("Input Image")
-    plt.axis("off")
+    image_files = [f for f in os.listdir(input_images_folder) if f.endswith(".png")]
 
-    mask = Image.open(spine_path).convert("L")
-    binary_mask = mask.point(lambda p: p > 0 and 255)
-    plt.subplot(1, 4, 2)
-    plt.imshow(binary_mask, cmap="gray", vmin=0, vmax=255)
-    plt.title("Spine Mask")
-    plt.axis("off")
-
-    plt.subplot(1, 4, 3)
-    plt.imshow(Image.open(dendrite_path))
-    plt.title("Dendrite Mask")
-    plt.axis("off")
-
-    plt.subplot(1, 4, 4)
-    plt.imshow(panoptic_mask)
-    plt.title("Panoptic Mask")
-    plt.axis("off")
-
-    plt.tight_layout()
-    plt.show()
+    for idx, image_name in enumerate(tqdm(image_files, desc="Processing images")):
+        if image_name.endswith(".png"):
+            image_path = os.path.join(input_images_folder, image_name)
+            img, boxes, instance_masks, scores = run_instance_inference(
+                instance_model, device, image_path, threshold=0.5
+            )
+            _, semantic_mask = run_semantic_inference(
+                semantic_model, device, image_path
+            )
+            panoptic_mask = create_panoptic_mask_with_colors(
+                instance_masks, semantic_mask, scores, threshold=0.3
+            )
+            output_path = os.path.join(output_folder, f"panoptic_{idx}.png")
+            Image.fromarray(panoptic_mask).save(output_path)
 
 
-model_instance, model_semantic = load_models(
-    "instance.pt", "semantic.pt", device=device
-)
-
-
-idx = 244
-dset = "Training"
-
-image_path = f"Dataset/DeepD3_{dset}/input_images/image_{idx}.png"
-dendrite_path = f"Dataset/DeepD3_{dset}/dendrite_images/dendrite_{idx}.png"
-spine_path = f"Dataset/DeepD3_{dset}/spine_images/spine_{idx}.png"
-
-img, boxes, instance_masks, scores = run_instance_inference(
-    model_instance, device, image_path, threshold=0
-)
-input_image, semantic_mask = run_semantic_inference(model_semantic, device, image_path)
-
-panoptic_mask = create_panoptic_mask_with_colors(
-    instance_masks, semantic_mask, scores, threshold=0.3
-)
-plot_panoptic_results(image_path, spine_path, dendrite_path, panoptic_mask)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Panoptic Segmentation Script")
+    parser.add_argument(
+        "--instance_model_path",
+        type=str,
+        required=True,
+        help="Path to the instance model.",
+    )
+    parser.add_argument(
+        "--semantic_model_path",
+        type=str,
+        required=True,
+        help="Path to the semantic model.",
+    )
+    parser.add_argument(
+        "--input_images_folder",
+        type=str,
+        required=True,
+        help="Path to the input images folder.",
+    )
+    parser.add_argument(
+        "--output_folder", type=str, required=True, help="Path to the output folder."
+    )
+    args = parser.parse_args()
+    main(
+        args.instance_model_path,
+        args.semantic_model_path,
+        args.input_images_folder,
+        args.output_folder,
+    )
