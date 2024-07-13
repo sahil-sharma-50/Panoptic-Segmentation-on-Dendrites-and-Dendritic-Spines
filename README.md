@@ -2,6 +2,9 @@
 This repository extends the <a href="https://github.com/ankilab/DeepD3">DeepD3</a> project by adding panoptic segmentation capabilities for the detailed analysis and quantification of dendrites and dendritic spines. It utilizes Mask R-CNN for instance segmentation on dendritic spines and FCN-ResNet for semantic segmentation of dendrites.
 
 # Steps to Get Started:
+Below are the steps you can follow to run inference on pre-trained Instance and Semantic segmentation models for dendrites and dendritic spines.
+### Step 0: Download the Dataset
+Download the DeepD3 dataset from Zenodo link: <a href='https://zenodo.org/records/8428849/files/DeepD3_Training_Validation_TIFF.zip?download=1'>DeepD3_Training_Validation_TIFF.Zip</a> 
 ### Step 1: Clone this repository
 ```
 git clone https://github.com/sahil-sharma-50/Panoptic-Segmentation-on-Dendrites-and-Dendritic-Spines.git
@@ -19,11 +22,9 @@ git clone https://github.com/sahil-sharma-50/Panoptic-Segmentation-on-Dendrites-
 pip install -r requirements.txt
 ```
 ### Step 4: Run panoptic_inference.py
-```
-Usage: python your_script_name.py --instance_model_path instance_model.pt --semantic_model_path semantic_model.pt --input_images_folder input_images_folder --output_folder output_folder
-```
-`Example:`
 Suppose, You have input_images inside this repo, with dendrite_model.pt and spines_model.pt
 ```
 python .\src\panoptic_inference\panoptic_inference.py --instance_model_path spines_model.pt --semantic_model_path dendrite_model.pt --input_images_folder input_images --output_folder output_folder
 ```
+
+# Train Own Instance and Semantic Model:
