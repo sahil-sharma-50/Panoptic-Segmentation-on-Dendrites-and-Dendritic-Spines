@@ -1,5 +1,5 @@
 # Panoptic-Segmentation-on-Dendrites-and-Dendritic-Spines
-This repository extends the <a href="https://github.com/ankilab/DeepD3">DeepD3</a> project by adding panoptic segmentation capabilities for the detailed analysis and quantification of dendrites and dendritic spines. It utilizes Mask R-CNN for instance segmentation of dendritic spines and FCN-ResNet for semantic segmentation of dendrites.
+This repository extends the <a href="https://github.com/ankilab/DeepD3">DeepD3</a> project by adding panoptic segmentation capabilities for the detailed analysis and quantification of dendrites and dendritic spines. It utilizes Mask R-CNN for instance segmentation on dendritic spines and FCN-ResNet for semantic segmentation of dendrites.
 
 # Steps to Get Started:
 ### Step 1: Clone this repository
@@ -20,6 +20,10 @@ pip install -r requirements.txt
 ```
 ### Step 4: Run panoptic_inference.py
 ```
-cd .\src\panoptic_inference\
-python panoptic_inference.py
+Usage: python your_script_name.py --instance_model_path instance_model.pt --semantic_model_path semantic_model.pt --input_images_folder input_images_folder --output_folder output_folder
+```
+`Example:`
+Suppose, You have input_images inside this repo, with dendrite_model.pt and spines_model.pt
+```
+python .\src\panoptic_inference\panoptic_inference.py --instance_model_path spines_model.pt --semantic_model_path dendrite_model.pt --input_images_folder input_images --output_folder output_folder
 ```
