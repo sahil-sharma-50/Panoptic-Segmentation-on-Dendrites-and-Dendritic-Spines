@@ -1,55 +1,66 @@
-from torchvision.transforms import functional as F
-from matplotlib.colors import ListedColormap
+import os
+import argparse
 import torch
+from tqdm import tqdm
+from torchvision.transforms import functional as F
 from torchvision.models.segmentation import fcn_resnet50
-import matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
+
+# Define command line arguments
+parser = argparse.ArgumentParser(
+    description="Inference for Dendrite Semantic Segmentation"
+)
+parser.add_argument(
+    "--model_path", type=str, required=True, help="Path to the trained model"
+)
+parser.add_argument(
+    "--Validation_Folder", type=str, required=True, help="Path to the validation folder"
+)
+parser.add_argument(
+    "--output_path",
+    type=str,
+    required=True,
+    help="Path to save the output images and metrics",
+)
+args = parser.parse_args()
 
 # Load and prepare the model
 num_classes = 1
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model_dendrites = fcn_resnet50(weights=None, num_classes=num_classes)
-model_dendrites.load_state_dict(torch.load("dendrite_model.pt"), strict=False)
+model_dendrites.load_state_dict(torch.load(args.model_path), strict=False)
 model_dendrites.eval().to(device)
 
+# Initialize lists for storing results
+predictions_list = []
 
-# Define the plot function
-def plot_results(R, G, B, input_image, actual_mask, prediction):
-    custom_cmap = ListedColormap(["black", (R / 255, G / 255, B / 255)])
-    fig, axs = plt.subplots(1, 3, figsize=(15, 5))
-    axs[0].imshow(input_image)
-    axs[0].set_title("Val Input Image")
-    axs[0].axis("off")
-    axs[1].imshow(actual_mask, cmap="gray")
-    axs[1].set_title("Dendrite Mask")
-    axs[1].axis("off")
-    axs[2].imshow(prediction, cmap=custom_cmap)
-    axs[2].set_title("Predicted Mask")
-    axs[2].axis("off")
-    plt.tight_layout()
-    plt.show()
+# Process images and generate predictions
+input_folder = os.path.join(args.Validation_Folder, "input_images")
+output_folder = args.output_path
 
+os.makedirs(output_folder, exist_ok=True)
 
-# Load and process images
-def process_and_plot_prediction(idx, dset):
-    image_path = f"Dataset/DeepD3_{dset}/input_images/image_{idx}.png"
-    mask_path = f"Dataset/DeepD3_{dset}/dendrite_images/dendrite_{idx}.png"
-    input_image = Image.open(image_path)
-    mask_image = Image.open(mask_path)
-    image = F.to_tensor(input_image.convert("RGB")).unsqueeze(0).to(device)
+# Sort the files based on their numerical suffixes
+input_images = sorted(os.listdir(input_folder))
 
-    # Inference and post-processing
-    with torch.no_grad():
-        output = model_dendrites(image)["out"]
-    semantic_mask_bin = (torch.sigmoid(output).squeeze().cpu().numpy() > 0.1).astype(
-        np.uint8
-    )
+# Add tqdm to display the progress bar
+for input_image_name in tqdm(input_images, desc="Processing images"):
+    if input_image_name.endswith(".png"):
+        image_path = os.path.join(input_folder, input_image_name)
 
-    # Plot results
-    plot_results(242, 90, 212, input_image, mask_image, semantic_mask_bin)
+        input_image = Image.open(image_path)
 
+        image = F.to_tensor(input_image.convert("RGB")).unsqueeze(0).to(device)
 
-idx = 50
-dset = "Validation"
-process_and_plot_prediction(idx, dset)
+        with torch.no_grad():
+            output = model_dendrites(image)["out"]
+        prediction = (torch.sigmoid(output).squeeze().cpu().numpy() > 0.5).astype(
+            np.uint8
+        )
+
+        predictions_list.append(prediction)
+
+        # Save prediction mask
+        output_image = Image.fromarray(prediction * 255)
+        output_image.save(os.path.join(output_folder, f"pred_{input_image_name}"))
