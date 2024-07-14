@@ -99,14 +99,15 @@ if __name__ == "__main__":
         description="Process a zip file containing TIFF images."
     )
     parser.add_argument(
-        "zip_path", type=str, help="Path to the zip file containing the images."
+        "--zip_path", type=str, required=True, help="Path to the zip file containing the images."
     )
     parser.add_argument(
-        "extract_path", type=str, help="Path where the zip file will be extracted."
+        "--extract_path", type=str, required=True, help="Path where the zip file will be extracted."
     )
     parser.add_argument(
-        "output_path",
+        "--output_path",
         type=str,
+        required=True,
         help="Folder where the processed images will be stored.",
     )
 
