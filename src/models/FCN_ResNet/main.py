@@ -56,7 +56,7 @@ metrics = {
     "valid_ious": [],
 }
 
-start_epoch, best_valid_loss = load_checkpoint(model, optimizer)
+start_epoch, best_valid_loss = load_checkpoint(model, optimizer, metrics)
 
 for epoch in range(start_epoch, EPOCHS):
     train_loss, train_accuracy, train_precision, train_recall, train_iou = train_fn(

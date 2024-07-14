@@ -2,7 +2,7 @@ import os
 import torch
 import numpy as np
 
-CHECKPOINT_DIR = os.path.join(os.path.dirname(__file__), "checkpoint_spines")
+CHECKPOINT_DIR = os.path.join(os.path.dirname(__file__), "checkpoint_dendrites")
 CHECKPOINT_PATH = os.path.join(CHECKPOINT_DIR, "model_checkpoint.pth")
 METRICS_PATH = os.path.join(CHECKPOINT_DIR, "metrics.npz")
 LOG_PATH = os.path.join(CHECKPOINT_DIR, "metrics_log.log")
@@ -10,7 +10,7 @@ LOG_PATH = os.path.join(CHECKPOINT_DIR, "metrics_log.log")
 os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 
 
-def load_checkpoint(model, optimizer):
+def load_checkpoint(model, optimizer, metrics):
     best_valid_loss = np.Inf
     start_epoch = 0
     if os.path.exists(CHECKPOINT_PATH):
