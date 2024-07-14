@@ -113,7 +113,7 @@ def main(instance_model_path, semantic_model_path, input_images_folder, output_f
         instance_model_path, semantic_model_path, device
     )
 
-    image_files = [f for f in os.listdir(input_images_folder) if f.endswith(".png")]
+    image_files = sorted([f for f in os.listdir(input_images_folder) if f.endswith(".png")])
 
     for idx, image_name in enumerate(tqdm(image_files, desc="Processing images")):
         if image_name.endswith(".png"):
