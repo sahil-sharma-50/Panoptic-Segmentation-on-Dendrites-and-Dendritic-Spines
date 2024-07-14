@@ -116,3 +116,7 @@ python src/models/FCN_ResNet/inference.py --model_path dendrite_model.pt --Valid
 ```
 python src/models/FCN_ResNet/main.py
 ```
+`Inference`
+```
+python src/models/MaskRCNN/inference.py --model_path spines_model.pt --Validation_Folder Dataset/DeepD3_Validation/ --output_path spine_predictions
+```
