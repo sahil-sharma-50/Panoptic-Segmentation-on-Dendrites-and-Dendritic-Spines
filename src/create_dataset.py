@@ -84,13 +84,16 @@ def process_folder(input_folder: str, output_folder: str) -> None:
 # Function to extract zip file and process images
 def main(zip_path: str, extract_path: str, output_path: str) -> None:
     with zipfile.ZipFile(zip_path, "r") as zip_ref:
-        zip_ref.extractall(extract_path)
+        file_list = zip_ref.namelist()
+        progress_bar = tqdm(file_list, desc=f"Extracting {zip_path}", unit=" files")
+        for file in progress_bar:
+            zip_ref.extract(file, extract_path)
 
     for folder_name in os.listdir(extract_path):
         folder_path = os.path.join(extract_path, folder_name)
         if os.path.isdir(folder_path):
             output_folder = os.path.join(output_path, folder_name)
-            print(f"Processing folder: {folder_name}")
+            # print(f"Processing folder: {folder_name}")
             process_folder(folder_path, output_folder)
 
 
@@ -99,10 +102,16 @@ if __name__ == "__main__":
         description="Process a zip file containing TIFF images."
     )
     parser.add_argument(
-        "--zip_path", type=str, required=True, help="Path to the zip file containing the images."
+        "--zip_path",
+        type=str,
+        required=True,
+        help="Path to the zip file containing the images.",
     )
     parser.add_argument(
-        "--extract_path", type=str, required=True, help="Path where the zip file will be extracted."
+        "--extract_path",
+        type=str,
+        required=True,
+        help="Path where the zip file will be extracted.",
     )
     parser.add_argument(
         "--output_path",
