@@ -1,6 +1,7 @@
 def collate_fn(batch):
     return tuple(zip(*batch))
 
+
 def compute_loss(model, images, targets):
     model.train()
     loss_dict = model(images, targets)

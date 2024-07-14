@@ -4,12 +4,25 @@ from PIL import Image
 import torch
 from torch.utils.data import Dataset
 
+
 class SpineDataset(Dataset):
     def __init__(self, root, transforms=None):
         self.root = root
         self.transforms = transforms
-        self.imgs = sorted([f for f in os.listdir(os.path.join(root, "input_images")) if os.path.isfile(os.path.join(root, "input_images", f))])
-        self.masks = sorted([f for f in os.listdir(os.path.join(root, "spine_images")) if os.path.isfile(os.path.join(root, "spine_images", f))])
+        self.imgs = sorted(
+            [
+                f
+                for f in os.listdir(os.path.join(root, "input_images"))
+                if os.path.isfile(os.path.join(root, "input_images", f))
+            ]
+        )
+        self.masks = sorted(
+            [
+                f
+                for f in os.listdir(os.path.join(root, "spine_images"))
+                if os.path.isfile(os.path.join(root, "spine_images", f))
+            ]
+        )
 
     def __getitem__(self, idx):
         img_path = os.path.join(self.root, "input_images", self.imgs[idx])
@@ -22,8 +35,8 @@ class SpineDataset(Dataset):
 
         if self.transforms:
             transformed = self.transforms(image=img, mask=mask)
-            img = transformed['image']
-            mask = transformed['mask']
+            img = transformed["image"]
+            mask = transformed["mask"]
 
         obj_ids = np.unique(mask)[1:]  # Remove background ID
 
@@ -47,7 +60,9 @@ class SpineDataset(Dataset):
             iscrowd = torch.zeros((0,), dtype=torch.int64)
         else:
             boxes = torch.as_tensor(boxes, dtype=torch.float32)
-            labels = torch.ones((len(boxes),), dtype=torch.int64)  # Assuming all objects are of class '1'
+            labels = torch.ones(
+                (len(boxes),), dtype=torch.int64
+            )  # Assuming all objects are of class '1'
             masks = np.array(masks, dtype=np.uint8)
             masks = torch.as_tensor(masks, dtype=torch.uint8)
             area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
@@ -59,7 +74,7 @@ class SpineDataset(Dataset):
             "masks": masks,
             "image_id": torch.tensor([idx]),
             "area": area,
-            "iscrowd": iscrowd
+            "iscrowd": iscrowd,
         }
 
         return img, target
