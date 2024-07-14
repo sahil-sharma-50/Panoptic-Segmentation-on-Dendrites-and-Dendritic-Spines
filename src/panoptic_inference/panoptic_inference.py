@@ -88,7 +88,7 @@ def random_color():
 
 
 def create_panoptic_mask_with_colors(
-    instance_masks, semantic_mask, scores, threshold=0.1
+    instance_masks, semantic_mask, scores, threshold=0.3
 ):
     height, width = semantic_mask.shape
     panoptic_mask = np.zeros((height, width, 3), dtype=np.uint8)
@@ -113,11 +113,14 @@ def main(instance_model_path, semantic_model_path, input_images_folder, output_f
         instance_model_path, semantic_model_path, device
     )
 
-    image_files = sorted([f for f in os.listdir(input_images_folder) if f.endswith(".png")])
+    image_files = sorted(
+        [f for f in os.listdir(input_images_folder) if f.endswith(".png")]
+    )
 
     for idx, image_name in enumerate(tqdm(image_files, desc="Processing images")):
         if image_name.endswith(".png"):
             image_path = os.path.join(input_images_folder, image_name)
+
             img, boxes, instance_masks, scores = run_instance_inference(
                 instance_model, device, image_path, threshold=0.5
             )
@@ -127,7 +130,9 @@ def main(instance_model_path, semantic_model_path, input_images_folder, output_f
             panoptic_mask = create_panoptic_mask_with_colors(
                 instance_masks, semantic_mask, scores, threshold=0.3
             )
-            output_path = os.path.join(output_folder, f"panoptic_{idx}.png")
+
+            output_filename = f"panoptic_{image_name}"
+            output_path = os.path.join(output_folder, output_filename)
             Image.fromarray(panoptic_mask).save(output_path)
 
 
