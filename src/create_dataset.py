@@ -11,6 +11,9 @@ from tqdm import tqdm
 # Define a type alias for counters
 CountersType = Dict[str, int]
 
+# Global counters
+counters: CountersType = {"image": 0, "dendrite": 0, "spine": 0}
+
 
 # Function to process a single TIFF image
 def process_tiff(
@@ -55,7 +58,7 @@ def save_with_imsave(image_array: np.ndarray, output_path: str) -> None:
 # Function to process all TIFF images in a folder
 def process_folder(input_folder: str, output_folder: str) -> None:
     global counters
-    counters: CountersType = {"image": 0, "dendrite": 0, "spine": 0}
+    counters = {"image": 0, "dendrite": 0, "spine": 0}
 
     input_images_path = os.path.join(output_folder, "input_images")
     dendrites_images_path = os.path.join(output_folder, "dendrite_images")
