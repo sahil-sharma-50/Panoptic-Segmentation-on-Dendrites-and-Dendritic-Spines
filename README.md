@@ -53,7 +53,7 @@ Arguments:
 3. `--input_images_folder:` Directory containing the input images (e.g., input_images).
 4. `--output_folder:` Directory where the output will be saved (e.g., output_folder).
 ```
-python .\src\panoptic_inference\panoptic_inference.py --instance_model_path spines_model.pt --semantic_model_path dendrite_model.pt --input_images_folder input_images --output_folder output_folder
+python src/panoptic_inference/panoptic_inference.py --instance_model_path spines_model.pt --semantic_model_path dendrite_model.pt --input_images_folder input_images --output_folder output_folder
 ```
 <hr>
 
@@ -67,6 +67,6 @@ Arguments:
 2. `--extract_path:` Path where to extract the zip file (e.g., DeepD3_Training_Validation_TIFF).
 3. `--output_folder:` Directory where the output will be saved. (e.g. Dataset).
 ```
-python create_dataset.py --zip_path DeepD3_Training_Validation_TIFF.zip --extract_path ./DeepD3_Training_Validation_TIFF --output_path ./Dataset
+python src/create_dataset.py --zip_path DeepD3_Training_Validation_TIFF.zip --extract_path ./DeepD3_Training_Validation_TIFF --output_path ./Dataset
 ```
 ### Step 3: Run ``
