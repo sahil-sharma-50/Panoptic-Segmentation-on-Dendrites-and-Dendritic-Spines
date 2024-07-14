@@ -108,6 +108,10 @@ python src/create_dataset.py --zip_path DeepD3_Training_Validation_TIFF.zip --ex
 ```
 python src/models/MaskRCNN/main.py
 ```
+`Inference`
+```
+python src/models/FCN_ResNet/inference.py --model_path dendrite_model.pt --Validation_Folder Dataset/DeepD3_Validation/ --output_path dendrite_predictions
+```
 ### Command for "Semantic Segmentation":
 ```
 python src/models/FCN_ResNet/main.py
