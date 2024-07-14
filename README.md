@@ -69,4 +69,42 @@ Arguments:
 ```
 python src/create_dataset.py --zip_path DeepD3_Training_Validation_TIFF.zip --extract_path ./DeepD3_Training_Validation_TIFF --output_path ./Dataset
 ```
-### Step 3: Run ``
+`Note:` Make sure that the above output dir (e.g. Dataset) is in the same folder.
+```
+├── Dataset/
+│ ├── DeepD3_Training/
+│ │ ├── dendrite_images/
+│ │ │ ├── dendrite_0.png
+│ │ │ ├── ...
+│ │ │ ├── ...
+│ │ ├── input_images/
+│ │ │ ├── image_0.png
+│ │ │ ├── ...
+│ │ │ ├── ...
+│ │ ├── spine_images/
+│ │ │ ├── spine_0.png
+│ │ │ ├── ...
+│ │ │ ├── ...
+│ ├── DeepD3_Validation/
+│ │ ├── dendrite_images/
+│ │ │ ├── dendrite_0.png
+│ │ │ ├── ...
+│ │ │ ├── ...
+│ │ ├── input_images/
+│ │ │ ├── image_0.png
+│ │ │ ├── ...
+│ │ │ ├── ...
+│ │ ├── spine_images/
+│ │ │ ├── spine_0.png
+│ │ │ ├── ...
+│ │ │ ├── ...
+├── src/
+```
+### Command for "Instance Segmentation":
+```
+python src/models/MaskRCNN/main.py
+```
+### Command for "Semantic Segmentation":
+```
+python src/models/FCN_ResNet/main.py
+```
