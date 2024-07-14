@@ -2,13 +2,26 @@ import os
 from PIL import Image
 from torch.utils.data import Dataset
 
+
 class DendritesDataset(Dataset):
     def __init__(self, root, transforms=None):
         self.root = root
         self.transforms = transforms
-        
-        self.images = sorted([f for f in os.listdir(os.path.join(root, "input_images")) if os.path.isfile(os.path.join(root, "input_images", f))])
-        self.masks = sorted([f for f in os.listdir(os.path.join(root, "dendrite_images")) if os.path.isfile(os.path.join(root, "dendrite_images", f))])
+
+        self.images = sorted(
+            [
+                f
+                for f in os.listdir(os.path.join(root, "input_images"))
+                if os.path.isfile(os.path.join(root, "input_images", f))
+            ]
+        )
+        self.masks = sorted(
+            [
+                f
+                for f in os.listdir(os.path.join(root, "dendrite_images"))
+                if os.path.isfile(os.path.join(root, "dendrite_images", f))
+            ]
+        )
 
     def __len__(self):
         return len(self.images)
