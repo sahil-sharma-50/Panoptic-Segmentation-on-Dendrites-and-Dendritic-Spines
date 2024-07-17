@@ -110,7 +110,7 @@ python src/models/MaskRCNN/main.py
 ```
 `Inference`
 ```
-python src/models/FCN_ResNet/inference.py --model_path dendrite_model.pt --Validation_Folder Dataset/DeepD3_Validation/ --output_path dendrite_predictions
+python src/models/MaskRCNN/inference.py --model_path spines_model.pt --Validation_Folder Dataset/DeepD3_Validation/ --output_path spine_predictions
 ```
 ### Command for "Semantic Segmentation":
 ```
@@ -118,5 +118,5 @@ python src/models/FCN_ResNet/main.py
 ```
 `Inference`
 ```
-python src/models/MaskRCNN/inference.py --model_path spines_model.pt --Validation_Folder Dataset/DeepD3_Validation/ --output_path spine_predictions
+python src/models/FCN_ResNet/inference.py --model_path dendrite_model.pt --Validation_Folder Dataset/DeepD3_Validation/ --output_path dendrite_predictions
 ```
