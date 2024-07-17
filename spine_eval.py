@@ -1,0 +1,103 @@
+import os
+import numpy as np
+from PIL import Image
+import torch
+from torchvision import transforms
+from torchvision.models.detection import maskrcnn_resnet50_fpn
+from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
+from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
+from torchvision.models.detection import MaskRCNN_ResNet50_FPN_Weights
+import cv2
+
+def get_model_instance_segmentation(num_classes):
+    weights = MaskRCNN_ResNet50_FPN_Weights.COCO_V1
+    model = maskrcnn_resnet50_fpn(weights=weights)
+    in_features = model.roi_heads.box_predictor.cls_score.in_features
+    model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
+    in_features_mask = model.roi_heads.mask_predictor.conv5_mask.in_channels
+    hidden_layer = 512
+    model.roi_heads.mask_predictor = MaskRCNNPredictor(in_features_mask, hidden_layer, num_classes)
+    return model
+
+def load_image(image_path, transform=None):
+    image = Image.open(image_path).convert('RGB')
+    if transform:
+        image = transform(image)
+    return image
+
+def load_mask(mask_path):
+    mask = Image.open(mask_path).convert('L')  # Convert to grayscale
+    mask = np.array(mask)
+    mask = (mask > 0).astype(np.uint8)  # Ensure binary mask
+    return mask
+
+def calculate_metrics(pred_mask, true_mask):
+    intersection = np.logical_and(pred_mask, true_mask).sum()
+    union = np.logical_or(pred_mask, true_mask).sum()
+    iou = intersection / union if union != 0 else 0
+    precision = intersection / pred_mask.sum() if pred_mask.sum() != 0 else 0
+    recall = intersection / true_mask.sum() if true_mask.sum() != 0 else 0
+    return iou, precision, recall
+
+# Define paths
+input_folder = 'Dataset/DeepD3_Validation/input_images'
+spine_folder = 'Dataset/DeepD3_Validation/spine_images'
+
+# Define transformations
+transform = transforms.Compose([
+    transforms.Resize((256, 256)),
+    transforms.ToTensor(),
+])
+
+# Initialize the model
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model = get_model_instance_segmentation(num_classes=2).to(device)
+
+# Load the trained model weights
+model.load_state_dict(torch.load('spines_model.pt', map_location=device), strict=False)
+model.eval()  # Set the model to evaluation mode
+
+# Load image and mask paths
+input_images = sorted([f for f in os.listdir(input_folder) if f.endswith('.png')])
+spine_images = sorted([f for f in os.listdir(spine_folder) if f.endswith('.png')])
+
+ious, precisions, recalls = [], [], []
+
+with torch.no_grad():
+    for input_image, spine_image in zip(input_images, spine_images):
+        # Load and preprocess images and masks
+        input_image_path = os.path.join(input_folder, input_image)
+        spine_image_path = os.path.join(spine_folder, spine_image)
+        
+        image = load_image(input_image_path, transform).unsqueeze(0).to(device)
+        true_mask = load_mask(spine_image_path)
+        
+        # Perform inference
+        output = model(image)
+        pred_masks = output[0]['masks'] > 0.5
+        
+        if pred_masks.shape[0] == 0:
+            continue
+            
+        pred_mask = pred_masks.squeeze().cpu().numpy().astype(np.uint8)
+        
+        if pred_mask.ndim > 2:
+            pred_mask = np.max(pred_mask, axis=0)
+        
+        # Ensure the predicted mask is the same size as the true mask
+        pred_mask_resized = cv2.resize(pred_mask, (true_mask.shape[1], true_mask.shape[0]), interpolation=cv2.INTER_NEAREST)
+        
+        # Calculate metrics
+        iou, precision, recall = calculate_metrics(pred_mask_resized, true_mask)
+        ious.append(iou)
+        precisions.append(precision)
+        recalls.append(recall)
+
+# Compute average metrics
+mean_iou = np.mean(ious)
+mean_precision = np.mean(precisions)
+mean_recall = np.mean(recalls)
+
+print(f'Mean IoU: {mean_iou:.4f}')
+print(f'Mean Precision: {mean_precision:.4f}')
+print(f'Mean Recall: {mean_recall:.4f}')
