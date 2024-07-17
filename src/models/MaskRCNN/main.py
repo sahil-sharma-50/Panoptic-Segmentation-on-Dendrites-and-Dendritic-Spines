@@ -11,6 +11,9 @@ from utils import collate_fn
 from train import train_one_epoch, validate_one_epoch
 from checkpoint import load_checkpoint, save_checkpoint
 
+import warnings
+warnings.filterwarnings("ignore")
+
 # Set device
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 num_classes = 2  # Background and spine
