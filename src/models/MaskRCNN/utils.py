@@ -1,42 +1,32 @@
-import numpy as np
-import torch
-from sklearn.metrics import accuracy_score, precision_score, recall_score
-
-def calculate_metrics(outputs: torch.Tensor, masks: torch.Tensor):
+def collate_fn(batch):
     """
-    Calculates various performance metrics for binary segmentation.
+    Custom collate function for PyTorch DataLoader.
+    This function is used to combine a list of samples into a single batch.
 
     Parameters:
-    - outputs (torch.Tensor): The raw outputs from the model (logits).
-    - masks (torch.Tensor): The ground truth masks.
+    - batch (list of tuples): Batch of data points.
 
     Returns:
-    - Tuple[float, float, float, float]: A tuple containing accuracy, precision, recall, and IoU.
+    - tuple of lists: Collated batch.
     """
-    # Apply sigmoid activation to the outputs to get probabilities
-    outputs = torch.sigmoid(outputs)
-    
-    # Convert probabilities to binary predictions (threshold at 0.5)
-    outputs = (outputs > 0.5).float()
+    return tuple(zip(*batch))
 
-    # Move tensors to CPU, detach from the computation graph, convert to numpy arrays, 
-    # and flatten them for metric calculations
-    outputs = outputs.cpu().detach().numpy().astype(np.uint8).flatten()
-    masks = masks.cpu().detach().numpy().astype(np.uint8).flatten()
 
-    # Calculate accuracy using sklearn's accuracy_score function
-    accuracy = accuracy_score(masks, outputs)
-    
-    # Calculate precision; zero_division=1 prevents division by zero errors
-    precision = precision_score(masks, outputs, zero_division=1)
-    
-    # Calculate recall; zero_division=1 prevents division by zero errors
-    recall = recall_score(masks, outputs, zero_division=1)
+def compute_loss(model, images, targets):
+    """
+    Compute the loss for a given batch of images and targets using the model.
 
-    # Calculate the Intersection over Union (IoU)
-    intersection = np.sum((masks * outputs) > 0)
-    union = np.sum((masks + outputs) > 0)
-    iou = intersection / union if union > 0 else 0.0
+    Parameters:
+    - model (torch.nn.Module): The model.
+    - images (list or torch.Tensor): Input images.
+    - targets (list or torch.Tensor): Ground truth targets.
 
-    # Return the calculated metrics
-    return accuracy, precision, recall, iou
+    Returns:
+    - loss_dict (dict): Components of the loss.
+    - losses (torch.Tensor): Total loss.
+    """
+    model.train()
+    loss_dict = model(images, targets)
+    losses = sum(loss for loss in loss_dict.values())
+    model.eval()
+    return loss_dict, losses
