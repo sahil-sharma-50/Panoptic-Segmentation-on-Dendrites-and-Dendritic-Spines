@@ -4,9 +4,15 @@ from PIL import Image
 import torch
 from torch.utils.data import Dataset
 
-
 class SpineDataset(Dataset):
     def __init__(self, root, transforms=None):
+        """
+        Initialize the SpineDataset class.
+
+        Parameters:
+        - root (str): Root directory of the dataset.
+        - transforms (callable, optional): Optional transformations to apply to the images and masks.
+        """
         self.root = root
         self.transforms = transforms
         self.imgs = sorted(
@@ -25,6 +31,16 @@ class SpineDataset(Dataset):
         )
 
     def __getitem__(self, idx):
+        """
+        Get a single item from the dataset.
+
+        Parameters:
+        - idx (int): Index of the item to fetch.
+
+        Returns:
+        - img (PIL.Image): The image at the specified index.
+        - target (dict): Dictionary containing the target data for the image.
+        """
         img_path = os.path.join(self.root, "input_images", self.imgs[idx])
         mask_path = os.path.join(self.root, "spine_images", self.masks[idx])
         img = Image.open(img_path).convert("RGB")
@@ -33,12 +49,14 @@ class SpineDataset(Dataset):
         img = np.array(img)
         mask = np.array(mask)
 
+        # Apply transformations if provided
         if self.transforms:
             transformed = self.transforms(image=img, mask=mask)
             img = transformed["image"]
             mask = transformed["mask"]
 
-        obj_ids = np.unique(mask)[1:]  # Remove background ID
+        # Get unique object IDs, ignoring the background
+        obj_ids = np.unique(mask)[1:]
 
         boxes, masks = [], []
         for obj_id in obj_ids:
@@ -51,8 +69,8 @@ class SpineDataset(Dataset):
                     boxes.append([xmin, ymin, xmax, ymax])
                     masks.append(mask_obj)
 
+        # Handle case where no objects are found
         if len(boxes) == 0:
-            # Handling case where no objects are found
             boxes = torch.zeros((0, 4), dtype=torch.float32)
             labels = torch.zeros((0,), dtype=torch.int64)
             masks = torch.zeros((0, mask.shape[0], mask.shape[1]), dtype=torch.uint8)
@@ -80,4 +98,11 @@ class SpineDataset(Dataset):
         return img, target
 
     def __len__(self):
+        """
+        Return the number of items in the dataset.
+
+        Returns:
+        - int: Number of items in the dataset.
+        """
         return len(self.imgs)
+

@@ -57,20 +57,26 @@ EPOCHS = 100
 train_loss_components_list, val_loss_components_list = [], []
 
 for epoch in range(start_epoch, EPOCHS):
+    # Train for one epoch
     avg_train_loss, train_loss_components = train_one_epoch(
         model, optimizer, train_loader, device, epoch, EPOCHS
     )
+    
+    # Validate for one epoch
     avg_val_loss, val_loss_components = validate_one_epoch(
         model, val_loader, device, epoch, EPOCHS
     )
 
+    # Append losses and loss components
     train_losses.append(avg_train_loss)
     val_losses.append(avg_val_loss)
     train_loss_components_list.append(train_loss_components)
     val_loss_components_list.append(val_loss_components)
 
+    # Update learning rate scheduler
     lr_scheduler.step(avg_val_loss)
 
+    # Format and print loss components
     formatted_train_loss_components = " | ".join(
         [f"{k}: {v:.4f}" for k, v in train_loss_components.items()]
     )
@@ -82,10 +88,12 @@ for epoch in range(start_epoch, EPOCHS):
     print(f"Train Loss: {avg_train_loss:.4f} | {formatted_train_loss_components}")
     print(f"Val Loss: {avg_val_loss:.4f} | {formatted_val_loss_components}")
 
+    # Save model checkpoint if validation loss improves
     if avg_val_loss < best_val_loss:
         best_val_loss = avg_val_loss
         torch.save(model.state_dict(), "spines_model.pt")
 
+    # Save detailed checkpoint with loss components
     save_checkpoint(
         model,
         optimizer,
@@ -97,3 +105,4 @@ for epoch in range(start_epoch, EPOCHS):
         val_loss_components,
         EPOCHS,
     )
+

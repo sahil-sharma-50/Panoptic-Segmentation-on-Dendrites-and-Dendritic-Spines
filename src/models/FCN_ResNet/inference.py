@@ -8,21 +8,10 @@ from PIL import Image
 import numpy as np
 
 # Define command line arguments
-parser = argparse.ArgumentParser(
-    description="Inference for Dendrite Semantic Segmentation"
-)
-parser.add_argument(
-    "--model_path", type=str, required=True, help="Path to the trained model"
-)
-parser.add_argument(
-    "--Validation_Folder", type=str, required=True, help="Path to the validation folder"
-)
-parser.add_argument(
-    "--output_path",
-    type=str,
-    required=True,
-    help="Path to save the output images and metrics",
-)
+parser = argparse.ArgumentParser(description="Inference for Dendrite Semantic Segmentation")
+parser.add_argument("--model_path", type=str, required=True, help="Path to the trained model")
+parser.add_argument("--validation_folder", type=str, required=True, help="Path to the validation folder")
+parser.add_argument("--output_path", type=str, required=True, help="Path to save the output images and metrics")
 args = parser.parse_args()
 
 # Load and prepare the model
@@ -36,31 +25,32 @@ model_dendrites.eval().to(device)
 predictions_list = []
 
 # Process images and generate predictions
-input_folder = os.path.join(args.Validation_Folder, "input_images")
+input_folder = os.path.join(args.validation_folder, "input_images")
 output_folder = args.output_path
 
 os.makedirs(output_folder, exist_ok=True)
 
 # Sort the files based on their numerical suffixes
-input_images = sorted(os.listdir(input_folder))
+input_images = sorted([f for f in os.listdir(input_folder) if f.endswith(".png")])
 
 # Add tqdm to display the progress bar
 for input_image_name in tqdm(input_images, desc="Processing images"):
-    if input_image_name.endswith(".png"):
-        image_path = os.path.join(input_folder, input_image_name)
+    image_path = os.path.join(input_folder, input_image_name)
 
-        input_image = Image.open(image_path)
+    input_image = Image.open(image_path)
 
-        image = F.to_tensor(input_image.convert("RGB")).unsqueeze(0).to(device)
+    # Convert image to tensor and add batch dimension
+    image = F.to_tensor(input_image.convert("RGB")).unsqueeze(0).to(device)
 
-        with torch.no_grad():
-            output = model_dendrites(image)["out"]
-        prediction = (torch.sigmoid(output).squeeze().cpu().numpy() > 0.5).astype(
-            np.uint8
-        )
+    with torch.no_grad():
+        # Perform inference
+        output = model_dendrites(image)["out"]
+    prediction = (torch.sigmoid(output).squeeze().cpu().numpy() > 0.5).astype(np.uint8)
 
-        predictions_list.append(prediction)
+    predictions_list.append(prediction)
 
-        # Save prediction mask
-        output_image = Image.fromarray(prediction * 255)
-        output_image.save(os.path.join(output_folder, f"pred_{input_image_name}"))
+    # Save prediction mask
+    output_image = Image.fromarray(prediction * 255)
+    output_image.save(os.path.join(output_folder, f"pred_{input_image_name}"))
+
+

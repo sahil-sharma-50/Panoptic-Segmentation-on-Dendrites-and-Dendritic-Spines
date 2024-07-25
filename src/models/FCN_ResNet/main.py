@@ -2,11 +2,11 @@ import os
 import torch
 import numpy as np
 from torch.utils.data import DataLoader
-from dataset import DendritesDataset
-from model import get_model
-from train import train_fn, eval_fn
-from transforms import train_transform, val_transform
-from checkpoint import load_checkpoint, save_checkpoint
+from dataset import DendritesDataset  # Custom dataset
+from model import get_model  # Custom model definition
+from train import train_fn, eval_fn  # Custom training and evaluation functions
+from transforms import train_transform, val_transform  # Custom transformations
+from checkpoint import load_checkpoint, save_checkpoint  # Custom checkpoint handling
 
 # Define constants
 EPOCHS = 100
@@ -42,7 +42,7 @@ lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
     optimizer, mode="min", factor=0.5, patience=3
 )
 
-# Initialize variables
+# Initialize metrics dictionary
 metrics = {
     "train_losses": [],
     "valid_losses": [],
@@ -56,16 +56,22 @@ metrics = {
     "valid_ious": [],
 }
 
+# Load checkpoint if available
 start_epoch, best_valid_loss = load_checkpoint(model, optimizer, metrics)
 
+# Training and validation loop
 for epoch in range(start_epoch, EPOCHS):
+    # Training phase
     train_loss, train_accuracy, train_precision, train_recall, train_iou = train_fn(
         train_loader, model, criterion, optimizer, epoch, EPOCHS, device
     )
+    
+    # Validation phase
     valid_loss, valid_accuracy, valid_precision, valid_recall, valid_iou = eval_fn(
         val_loader, model, criterion, epoch, EPOCHS, device
     )
 
+    # Update metrics
     metrics["train_losses"].append(train_loss)
     metrics["valid_losses"].append(valid_loss)
     metrics["train_accuracies"].append(train_accuracy)
@@ -77,6 +83,7 @@ for epoch in range(start_epoch, EPOCHS):
     metrics["train_ious"].append(train_iou)
     metrics["valid_ious"].append(valid_iou)
 
+    # Print metrics for the current epoch
     print(f"Epoch {epoch+1}/{EPOCHS}")
     print(
         f"Train Loss: {train_loss:.4f} | Acc: {train_accuracy:.4f} | Precision: {train_precision:.4f} | Recall: {train_recall:.4f} | IoU: {train_iou:.4f}"
@@ -85,9 +92,12 @@ for epoch in range(start_epoch, EPOCHS):
         f"Valid Loss: {valid_loss:.4f} | Acc: {valid_accuracy:.4f} | Precision: {valid_precision:.4f} | Recall: {valid_recall:.4f} | IoU: {valid_iou:.4f}"
     )
 
+    # Save the model checkpoint if the validation loss has improved
     if valid_loss < best_valid_loss:
         torch.save(model.state_dict(), "dendrite_model.pt")
         best_valid_loss = valid_loss
 
+    # Save the checkpoint and metrics
     save_checkpoint(epoch, model, optimizer, best_valid_loss, metrics, EPOCHS)
     lr_scheduler.step(valid_loss)
+

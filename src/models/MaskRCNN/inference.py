@@ -12,6 +12,17 @@ import cv2
 
 
 def load_model(model_path, num_classes, device):
+    """
+    Load and initialize the instance segmentation model.
+
+    Parameters:
+    - model_path (str): Path to the trained model.
+    - num_classes (int): Number of classes for the model.
+    - device (torch.device): Device to load the model on (CPU or GPU).
+
+    Returns:
+    - model (torch.nn.Module): The loaded and initialized model.
+    """
     model = get_model_instance_segmentation(num_classes)
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.to(device)
@@ -20,10 +31,21 @@ def load_model(model_path, num_classes, device):
 
 
 def preprocess_image(image_path, device):
+    """
+    Preprocess the image for model inference.
+
+    Parameters:
+    - image_path (str): Path to the input image.
+    - device (torch.device): Device to move the tensor to (CPU or GPU).
+
+    Returns:
+    - img_tensor (torch.Tensor): Preprocessed image tensor.
+    """
     # Define the transformation pipeline for inference
-    transform = Compose(
-        [Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)), ToTensorV2()]
-    )
+    transform = Compose([
+        Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+        ToTensorV2()
+    ])
 
     # Load and preprocess the input image using Albumentations
     img = Image.open(image_path).convert("RGB")
@@ -34,6 +56,20 @@ def preprocess_image(image_path, device):
 
 
 def run_inference(model, device, image_path, threshold=0.5):
+    """
+    Run inference on the given image using the model.
+
+    Parameters:
+    - model (torch.nn.Module): The model used for inference.
+    - device (torch.device): Device to run the inference on (CPU or GPU).
+    - image_path (str): Path to the input image.
+    - threshold (float): Threshold for filtering predictions.
+
+    Returns:
+    - pred_boxes (np.ndarray): Predicted bounding boxes.
+    - pred_masks (np.ndarray): Predicted masks.
+    - pred_scores (np.ndarray): Predicted scores.
+    """
     img_tensor = preprocess_image(image_path, device)
 
     # Perform inference
@@ -54,12 +90,25 @@ def run_inference(model, device, image_path, threshold=0.5):
 
 
 def visualize_results(img, boxes, masks, scores, threshold=0.5):
+    """
+    Visualize the results by drawing bounding boxes and applying masks.
+
+    Parameters:
+    - img (PIL.Image): The original image.
+    - boxes (np.ndarray): Bounding boxes to draw.
+    - masks (np.ndarray): Masks to apply.
+    - scores (np.ndarray): Confidence scores.
+    - threshold (float): Threshold for displaying the results.
+
+    Returns:
+    - result_img (PIL.Image): Image with visualized results.
+    """
     img_np = np.array(img)
 
     for i, box in enumerate(boxes):
         if scores[i] >= threshold:
             xmin, ymin, xmax, ymax = box.astype(int)
-            # Draw the rectangle
+            # Draw the bounding box
             cv2.rectangle(img_np, (xmin, ymin), (xmax, ymax), (255, 0, 0), 2)
             # Apply the mask
             mask = masks[i, 0] > 0
@@ -69,6 +118,9 @@ def visualize_results(img, boxes, masks, scores, threshold=0.5):
 
 
 def main():
+    """
+    Main function to run inference on the dataset and save the results.
+    """
     # Define command line arguments
     parser = argparse.ArgumentParser(description="Inference for Spine Segmentation")
     parser.add_argument(
@@ -98,29 +150,31 @@ def main():
     # Initialize lists for storing results
     predictions_list = []
 
-    # Process images and generate predictions
+    # Prepare input and output folders
     input_folder = os.path.join(args.Validation_Folder, "input_images")
     output_folder = args.output_path
     os.makedirs(output_folder, exist_ok=True)
 
     # Sort the files based on their numerical suffixes
-    input_images = sorted(os.listdir(input_folder))
+    input_images = sorted([f for f in os.listdir(input_folder) if f.endswith(".png")])
 
     # Add tqdm to display the progress bar
     for input_image_name in tqdm(input_images, desc="Processing images"):
-        if input_image_name.endswith(".png"):
-            image_path = os.path.join(input_folder, input_image_name)
-            img = Image.open(image_path).convert("RGB")
+        image_path = os.path.join(input_folder, input_image_name)
+        img = Image.open(image_path).convert("RGB")
 
-            boxes, masks, scores = run_inference(
-                model, device, image_path, threshold=0.5
-            )
-            predicted_mask = visualize_results(img, boxes, masks, scores, threshold=0.5)
-            predictions_list.append(predicted_mask)
+        # Run inference
+        boxes, masks, scores = run_inference(
+            model, device, image_path, threshold=0.5
+        )
+        # Visualize and save results
+        predicted_mask = visualize_results(img, boxes, masks, scores, threshold=0.5)
+        predictions_list.append(predicted_mask)
 
-            # Save prediction mask
-            predicted_mask.save(os.path.join(output_folder, f"pred_{input_image_name}"))
+        # Save prediction mask
+        predicted_mask.save(os.path.join(output_folder, f"pred_{input_image_name}"))
 
 
 if __name__ == "__main__":
     main()
+
