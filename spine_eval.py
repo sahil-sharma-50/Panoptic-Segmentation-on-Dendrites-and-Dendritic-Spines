@@ -82,6 +82,7 @@ def calculate_metrics(pred_mask, true_mask):
     """
     intersection = np.logical_and(pred_mask, true_mask).sum()
     union = np.logical_or(pred_mask, true_mask).sum()
+    # Handle divisible by zero, if union is zero make iou zero
     iou = intersection / union if union != 0 else 0
     precision = intersection / pred_mask.sum() if pred_mask.sum() != 0 else 0
     recall = intersection / true_mask.sum() if true_mask.sum() != 0 else 0
@@ -94,8 +95,8 @@ def main():
 
     # Define transformations
     transform = transforms.Compose([
-        transforms.Resize((256, 256)),
         transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
 
     # Initialize the model
@@ -126,11 +127,13 @@ def main():
             output = model(image)
             pred_masks = output[0]['masks'] > 0.5
             
+            # Check if number of predicted masks is zero
             if pred_masks.shape[0] == 0:
                 continue
             
             pred_mask = pred_masks.squeeze().cpu().numpy().astype(np.uint8)
             
+            # combining multiple predicted masks into a single mask.
             if pred_mask.ndim > 2:
                 pred_mask = np.max(pred_mask, axis=0)
             

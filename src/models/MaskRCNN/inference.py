@@ -78,7 +78,7 @@ def run_inference(model, device, image_path, threshold=0.5):
 
     # Process the predictions
     pred_boxes = prediction[0]["boxes"].cpu().numpy()
-    pred_scores = prediction[0]["scores"].cpu().numpy()
+    pred_scores = prediction[0]["scores"].cpu().numpy() # Model's confidence for each prediction
     pred_masks = prediction[0]["masks"].cpu().numpy()
 
     # Filter predictions by threshold
@@ -110,7 +110,7 @@ def visualize_results(img, boxes, masks, scores, threshold=0.5):
             xmin, ymin, xmax, ymax = box.astype(int)
             # Draw the bounding box
             cv2.rectangle(img_np, (xmin, ymin), (xmax, ymax), (255, 0, 0), 2)
-            # Apply the mask
+            # Apply the mask on i-th prediction and 0-th channel (single-channel masks) 
             mask = masks[i, 0] > 0
             img_np[mask] = [255, 0, 0]  # Red color for mask
 
