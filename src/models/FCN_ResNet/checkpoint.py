@@ -11,35 +11,6 @@ LOG_PATH = os.path.join(CHECKPOINT_DIR, "metrics_log.log")
 # Create the checkpoint directory if it doesn't exist
 os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 
-def load_checkpoint(model, optimizer, metrics):
-    """
-    Load the model and optimizer state from a checkpoint if it exists.
-
-    Parameters:
-    - model: The model to load the state into.
-    - optimizer: The optimizer to load the state into.
-    - metrics: A dictionary to load saved metrics.
-
-    Returns:
-    - start_epoch (int): The epoch to start training from.
-    - best_valid_loss (float): The best validation loss seen so far.
-    """
-    best_valid_loss = np.Inf  # Initialize best validation loss to infinity
-    start_epoch = 0  # Initialize start epoch
-
-    if os.path.exists(CHECKPOINT_PATH):
-        checkpoint = torch.load(CHECKPOINT_PATH)
-        model.load_state_dict(checkpoint["model_state_dict"])
-        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-        best_valid_loss = checkpoint["best_valid_loss"]
-        start_epoch = checkpoint["epoch"] + 1  # Start from the next epoch
-
-        if os.path.exists(METRICS_PATH):
-            loaded_metrics = np.load(METRICS_PATH)
-            for key in metrics:
-                metrics[key] = loaded_metrics[key].tolist()
-                
-    return start_epoch, best_valid_loss
 
 def save_checkpoint(epoch, model, optimizer, best_valid_loss, metrics, EPOCHS):
     """
@@ -76,3 +47,34 @@ def save_checkpoint(epoch, model, optimizer, best_valid_loss, metrics, EPOCHS):
             f"Valid Loss: {metrics['valid_losses'][-1]:.4f} | Acc: {metrics['valid_accuracies'][-1]:.4f} | Precision: {metrics['valid_precisions'][-1]:.4f} | Recall: {metrics['valid_recalls'][-1]:.4f} | IoU: {metrics['valid_ious'][-1]:.4f}\n\n"
         )
 
+
+
+def load_checkpoint(model, optimizer, metrics):
+    """
+    Load the model and optimizer state from a checkpoint if it exists.
+
+    Parameters:
+    - model: The model to load the state into.
+    - optimizer: The optimizer to load the state into.
+    - metrics: A dictionary to load saved metrics.
+
+    Returns:
+    - start_epoch (int): The epoch to start training from.
+    - best_valid_loss (float): The best validation loss seen so far.
+    """
+    best_valid_loss = np.Inf  # Initialize best validation loss to infinity
+    start_epoch = 0  # Initialize start epoch
+
+    if os.path.exists(CHECKPOINT_PATH):
+        checkpoint = torch.load(CHECKPOINT_PATH)
+        model.load_state_dict(checkpoint["model_state_dict"])
+        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        best_valid_loss = checkpoint["best_valid_loss"]
+        start_epoch = checkpoint["epoch"] + 1  # Start from the next epoch
+
+        if os.path.exists(METRICS_PATH):
+            loaded_metrics = np.load(METRICS_PATH)
+            for key in metrics:
+                metrics[key] = loaded_metrics[key].tolist()
+                
+    return start_epoch, best_valid_loss

@@ -16,6 +16,7 @@ def get_model():
     model = fcn_resnet50(weights=weights, progress=True)
 
     # Modify the classifier to output a single channel (for binary segmentation)
+    # (input channels, output channels, kernel size)
     model.classifier[4] = nn.Conv2d(512, 1, kernel_size=1)
 
     return model

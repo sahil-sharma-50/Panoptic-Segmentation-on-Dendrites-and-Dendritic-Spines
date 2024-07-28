@@ -172,9 +172,14 @@ def create_panoptic_mask_with_colors(instance_masks, semantic_mask, scores, thre
             panoptic_mask[mask_bin] = unique_color
             
             # Draw contours around instances
+            # 1. convert mask_bin to unsigned 8-bit integer type (required format for contour finding)
+            # 2. retrieves external contours
+            # 3. Compresses horizontal, vertical, and diagonal segments and leaves only their end points.
             contours, _ = cv2.findContours(
                 mask_bin.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
             )
+            # Draw contours on panoptic_mask
+            # (mask, list of contours, draw all contours, Blue (BRG format), thickness)
             cv2.drawContours(panoptic_mask, contours, -1, (255, 0, 0), 1)
     
     return panoptic_mask
