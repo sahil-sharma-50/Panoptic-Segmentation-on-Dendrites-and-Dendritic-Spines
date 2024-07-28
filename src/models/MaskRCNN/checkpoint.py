@@ -8,40 +8,6 @@ CHECKPOINT_PATH = os.path.join(CHECKPOINT_DIR, "checkpoint.pth")
 LOSS_PATH = os.path.join(CHECKPOINT_DIR, "losses.npz")
 LOG_PATH = os.path.join(CHECKPOINT_DIR, "training_log.log")
 
-def load_checkpoint(model, optimizer):
-    """
-    Loads the model and optimizer states from the checkpoint if available.
-    
-    Parameters:
-    - model (torch.nn.Module): The model to load state_dict into.
-    - optimizer (torch.optim.Optimizer): The optimizer to load state_dict into.
-    
-    Returns:
-    - start_epoch (int): The epoch to resume training from.
-    - best_val_loss (float): The best validation loss recorded.
-    - train_losses (list): List of training losses loaded from the checkpoint.
-    - val_losses (list): List of validation losses loaded from the checkpoint.
-    """
-    global best_val_loss
-    best_val_loss = np.inf
-    start_epoch = 0
-    train_losses, val_losses = [], []
-
-    # Check if checkpoint file exists
-    if os.path.exists(CHECKPOINT_PATH):
-        checkpoint = torch.load(CHECKPOINT_PATH)
-        model.load_state_dict(checkpoint["model_state_dict"])
-        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-        best_val_loss = checkpoint["best_val_loss"]
-        start_epoch = checkpoint["epoch"] + 1
-
-        # Check if losses file exists and load losses
-        if os.path.exists(LOSS_PATH):
-            loaded_losses = np.load(LOSS_PATH)
-            train_losses.extend(loaded_losses["train_losses"].tolist())
-            val_losses.extend(loaded_losses["val_losses"].tolist())
-
-    return start_epoch, best_val_loss, train_losses, val_losses
 
 def save_checkpoint(
     model,
@@ -103,4 +69,40 @@ def save_checkpoint(
             f"Valid Loss: {val_losses[-1]:.4f} | {formatted_val_loss_components}\n"
         )
         logfile.write("\n")
+
+
+def load_checkpoint(model, optimizer):
+    """
+    Loads the model and optimizer states from the checkpoint if available.
+    
+    Parameters:
+    - model (torch.nn.Module): The model to load state_dict into.
+    - optimizer (torch.optim.Optimizer): The optimizer to load state_dict into.
+    
+    Returns:
+    - start_epoch (int): The epoch to resume training from.
+    - best_val_loss (float): The best validation loss recorded.
+    - train_losses (list): List of training losses loaded from the checkpoint.
+    - val_losses (list): List of validation losses loaded from the checkpoint.
+    """
+    global best_val_loss
+    best_val_loss = np.inf
+    start_epoch = 0
+    train_losses, val_losses = [], []
+
+    # Check if checkpoint file exists
+    if os.path.exists(CHECKPOINT_PATH):
+        checkpoint = torch.load(CHECKPOINT_PATH)
+        model.load_state_dict(checkpoint["model_state_dict"])
+        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        best_val_loss = checkpoint["best_val_loss"]
+        start_epoch = checkpoint["epoch"] + 1
+
+        # Check if losses file exists and load losses
+        if os.path.exists(LOSS_PATH):
+            loaded_losses = np.load(LOSS_PATH)
+            train_losses.extend(loaded_losses["train_losses"].tolist())
+            val_losses.extend(loaded_losses["val_losses"].tolist())
+
+    return start_epoch, best_val_loss, train_losses, val_losses
 

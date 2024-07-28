@@ -45,6 +45,8 @@ val_loader = DataLoader(
 # Initialize optimizer and scheduler
 params = [p for p in model.parameters() if p.requires_grad]
 optimizer = torch.optim.Adam(params, lr=0.00001)
+# Reduces learning rate when a metric (validation loss) has stopped improving.
+# Reduce the learning rate by a factor of 0.5 if validation loss does not improve for 3 epochs.
 lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
     optimizer, mode="min", factor=0.5, patience=3
 )
