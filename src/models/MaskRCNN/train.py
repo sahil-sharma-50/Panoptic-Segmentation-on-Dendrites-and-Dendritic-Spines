@@ -20,13 +20,16 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, num_epochs):
     """
     model.train()  # Set model to training mode
     train_epoch_loss = 0
+    # Printing below loss seperately for better understanding
     loss_components = {"loss_box_reg": 0, "loss_classifier": 0, "loss_mask": 0}
     
     # Create a progress bar for tracking training progress
     progress_bar = tqdm.tqdm(data_loader, desc=f"Epoch {epoch+1}/{num_epochs} - Training")
 
     for images, targets in progress_bar:
+        # images (list) : List of images
         images = list(img.to(device) for img in images)
+        # targets (list of dict) : Getting keys and values of the targets (dict)
         targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
         # Forward pass and compute losses
@@ -39,6 +42,7 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, num_epochs):
 
         # Accumulate losses
         train_epoch_loss += losses.item()
+        
         for k in loss_components.keys():
             if k in loss_dict:
                 loss_components[k] += loss_dict[k].item()
@@ -67,6 +71,7 @@ def validate_one_epoch(model, data_loader, device, epoch, num_epochs):
     """
     model.eval()  # Set model to evaluation mode
     val_epoch_loss = 0
+    # Printing below loss seperately for better understanding
     loss_components = {"loss_box_reg": 0, "loss_classifier": 0, "loss_mask": 0}
     
     # Create a progress bar for tracking validation progress
