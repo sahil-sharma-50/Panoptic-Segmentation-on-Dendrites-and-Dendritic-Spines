@@ -4,7 +4,7 @@ This repository extends the <a href="https://github.com/ankilab/DeepD3">DeepD3</
 #### Table of Contents:
 ```
 Panoptic-Segmentation-on-Dendrites-and-Dendritic-Spines/
-├── docs/
+├── assets/
 ├── notebooks/
 ├── report/
 ├── src/
