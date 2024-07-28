@@ -33,6 +33,10 @@ Panoptic-Segmentation-on-Dendrites-and-Dendritic-Spines/
 ├── requirements.txt
 ├── README.md
 ```
+## Panoptic Segmentation
+[![Panoptic Segmentation](assets/pipeline.jpg)]([https://www.google.com](https://viso.ai/deep-learning/panoptic-segmentation-a-basic-to-advanced-guide-2024/))
+Panoptic segmentation combines the strengths of semantic and instance segmentation by assigning both a semantic label and an instance ID to every pixel in the image. It assigns a unique label to each pixel, corresponding to either a “thing” (countable object instances like cars, people, or animals) or “stuff” (amorphous regions like grass, sky, or road).
+
 
 ## 1. Steps to Get Started:
 Below are the steps that you can follow to run panoptic inference on pre-trained Instance and Semantic segmentation models on your dataset.
