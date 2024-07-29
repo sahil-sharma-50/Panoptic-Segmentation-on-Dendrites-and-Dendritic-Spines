@@ -2,6 +2,7 @@ import torch
 from tqdm import tqdm
 from utils import calculate_metrics
 
+
 def train_fn(data_loader, model, criterion, optimizer, epoch, num_epochs, device):
     """
     Train the model for one epoch.
@@ -39,6 +40,8 @@ def train_fn(data_loader, model, criterion, optimizer, epoch, num_epochs, device
         optimizer.step()
 
         running_loss += loss.item() * images.size(0)
+
+        # Calculate metrics
         accuracy, precision, recall, iou = calculate_metrics(outputs, masks)
         total_accuracy += accuracy * images.size(0)
         total_precision += precision * images.size(0)
@@ -55,6 +58,7 @@ def train_fn(data_loader, model, criterion, optimizer, epoch, num_epochs, device
     epoch_iou = total_iou / len(data_loader.dataset)
 
     return epoch_loss, epoch_accuracy, epoch_precision, epoch_recall, epoch_iou
+
 
 def eval_fn(data_loader, model, criterion, epoch, num_epochs, device):
     """
@@ -90,6 +94,8 @@ def eval_fn(data_loader, model, criterion, epoch, num_epochs, device):
             loss = criterion(outputs, masks)
 
             running_loss += loss.item() * images.size(0)
+
+            # Calculate metrics
             accuracy, precision, recall, iou = calculate_metrics(outputs, masks)
             total_accuracy += accuracy * images.size(0)
             total_precision += precision * images.size(0)
@@ -106,4 +112,3 @@ def eval_fn(data_loader, model, criterion, epoch, num_epochs, device):
     epoch_iou = total_iou / len(data_loader.dataset)
 
     return epoch_loss, epoch_accuracy, epoch_precision, epoch_recall, epoch_iou
-

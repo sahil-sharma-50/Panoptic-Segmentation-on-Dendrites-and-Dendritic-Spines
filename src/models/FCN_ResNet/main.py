@@ -2,11 +2,12 @@ import os
 import torch
 import numpy as np
 from torch.utils.data import DataLoader
-from dataset import DendritesDataset  # Custom dataset
-from model import get_model  # Custom model definition
-from train import train_fn, eval_fn  # Custom training and evaluation functions
-from transforms import train_transform, val_transform  # Custom transformations
-from checkpoint import load_checkpoint, save_checkpoint  # Custom checkpoint handling
+
+from dataset import DendritesDataset
+from model import get_model
+from train import train_fn, eval_fn
+from transforms import train_transform, val_transform
+from checkpoint import load_checkpoint, save_checkpoint
 
 # Define constants
 EPOCHS = 100
@@ -65,7 +66,7 @@ for epoch in range(start_epoch, EPOCHS):
     train_loss, train_accuracy, train_precision, train_recall, train_iou = train_fn(
         train_loader, model, criterion, optimizer, epoch, EPOCHS, device
     )
-    
+
     # Validation phase
     valid_loss, valid_accuracy, valid_precision, valid_recall, valid_iou = eval_fn(
         val_loader, model, criterion, epoch, EPOCHS, device
@@ -100,4 +101,3 @@ for epoch in range(start_epoch, EPOCHS):
     # Save the checkpoint and metrics
     save_checkpoint(epoch, model, optimizer, best_valid_loss, metrics, EPOCHS)
     lr_scheduler.step(valid_loss)
-

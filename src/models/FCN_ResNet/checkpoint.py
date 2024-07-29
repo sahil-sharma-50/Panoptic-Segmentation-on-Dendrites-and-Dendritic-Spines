@@ -48,7 +48,6 @@ def save_checkpoint(epoch, model, optimizer, best_valid_loss, metrics, EPOCHS):
         )
 
 
-
 def load_checkpoint(model, optimizer, metrics):
     """
     Load the model and optimizer state from a checkpoint if it exists.
@@ -76,5 +75,5 @@ def load_checkpoint(model, optimizer, metrics):
             loaded_metrics = np.load(METRICS_PATH)
             for key in metrics:
                 metrics[key] = loaded_metrics[key].tolist()
-                
+
     return start_epoch, best_valid_loss

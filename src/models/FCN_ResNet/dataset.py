@@ -2,6 +2,7 @@ import os
 from PIL import Image
 from torch.utils.data import Dataset
 
+
 class DendritesDataset(Dataset):
     """
     Custom dataset for loading dendrite images and their corresponding masks.
@@ -27,13 +28,15 @@ class DendritesDataset(Dataset):
         # Get sorted list of image and mask filenames
         self.images = sorted(
             [
-                f for f in os.listdir(os.path.join(root, "input_images"))
+                f
+                for f in os.listdir(os.path.join(root, "input_images"))
                 if os.path.isfile(os.path.join(root, "input_images", f))
             ]
         )
         self.masks = sorted(
             [
-                f for f in os.listdir(os.path.join(root, "dendrite_images"))
+                f
+                for f in os.listdir(os.path.join(root, "dendrite_images"))
                 if os.path.isfile(os.path.join(root, "dendrite_images", f))
             ]
         )
@@ -71,4 +74,3 @@ class DendritesDataset(Dataset):
             mask = (mask > 0).float()  # Convert mask to binary (0 or 1)
 
         return image, mask
-

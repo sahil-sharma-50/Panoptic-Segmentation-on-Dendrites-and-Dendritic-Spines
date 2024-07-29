@@ -2,6 +2,7 @@ import numpy as np
 import torch
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 
+
 def calculate_metrics(outputs, masks):
     """
     Calculate various evaluation metrics for binary segmentation.
@@ -16,10 +17,10 @@ def calculate_metrics(outputs, masks):
     - recall (float): Recall of the predictions.
     - iou (float): Intersection over Union (IoU) metric.
     """
-    
+
     # Apply sigmoid activation to outputs to obtain probabilities
     outputs = torch.sigmoid(outputs)
-    
+
     # Convert probabilities to binary predictions
     outputs = (outputs > 0.5).float()
 
@@ -38,4 +39,3 @@ def calculate_metrics(outputs, masks):
     iou = intersection / union if union > 0 else 0.0
 
     return accuracy, precision, recall, iou
-

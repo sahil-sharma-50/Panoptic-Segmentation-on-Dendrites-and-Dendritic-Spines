@@ -8,10 +8,21 @@ from PIL import Image
 import numpy as np
 
 # Define command line arguments
-parser = argparse.ArgumentParser(description="Inference for Dendrite Semantic Segmentation")
-parser.add_argument("--model_path", type=str, required=True, help="Path to the trained model")
-parser.add_argument("--validation_folder", type=str, required=True, help="Path to the validation folder")
-parser.add_argument("--output_path", type=str, required=True, help="Path to save the output images and metrics")
+parser = argparse.ArgumentParser(
+    description="Inference for Dendrite Semantic Segmentation"
+)
+parser.add_argument(
+    "--model_path", type=str, required=True, help="Path to the trained model"
+)
+parser.add_argument(
+    "--validation_folder", type=str, required=True, help="Path to the validation folder"
+)
+parser.add_argument(
+    "--output_path",
+    type=str,
+    required=True,
+    help="Path to save the output images and metrics",
+)
 args = parser.parse_args()
 
 # Load and prepare the model
@@ -21,8 +32,6 @@ model_dendrites = fcn_resnet50(weights=None, num_classes=num_classes)
 model_dendrites.load_state_dict(torch.load(args.model_path), strict=False)
 model_dendrites.eval().to(device)
 
-# Initialize lists for storing results
-predictions_list = []
 
 # Process images and generate predictions
 input_folder = os.path.join(args.validation_folder, "input_images")
@@ -42,15 +51,12 @@ for input_image_name in tqdm(input_images, desc="Processing images"):
     # Convert image to tensor and add batch dimension
     image = F.to_tensor(input_image.convert("RGB")).unsqueeze(0).to(device)
 
+    # Perform Inference
     with torch.no_grad():
-        # Perform inference
         output = model_dendrites(image)["out"]
     prediction = (torch.sigmoid(output).squeeze().cpu().numpy() > 0.5).astype(np.uint8)
 
-    predictions_list.append(prediction)
-
     # Save prediction mask
+    # Image formats often require pixel values in the range [0, 255]
     output_image = Image.fromarray(prediction * 255)
     output_image.save(os.path.join(output_folder, f"pred_{input_image_name}"))
-
-
