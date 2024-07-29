@@ -1,6 +1,8 @@
 # Panoptic-Segmentation-on-Dendrites-and-Dendritic-Spines
 This repository extends the <a href="https://github.com/ankilab/DeepD3">DeepD3</a> project by adding panoptic segmentation capabilities for the detailed analysis and quantification of dendrites and dendritic spines. It utilizes Mask R-CNN for instance segmentation of dendritic spines and FCN-ResNet for semantic segmentation of dendrites.
 
+`Authors` - [@sahilsharma](https://www.github.com/sahil-sharma-50)
+
 #### Table of Contents:
 ```
 Panoptic-Segmentation-on-Dendrites-and-Dendritic-Spines/
@@ -109,6 +111,7 @@ python src/create_dataset.py --zip_path DeepD3_Training_Validation_TIFF.zip --ex
 ├── src/
 ```
 ### Command for "Instance Segmentation":
+Run the below command to start training the Mask RCNN model.
 ```
 python src/models/MaskRCNN/main.py
 ```
@@ -117,6 +120,7 @@ python src/models/MaskRCNN/main.py
 python src/models/MaskRCNN/inference.py --model_path spines_model.pt --Validation_Folder Dataset/DeepD3_Validation/ --output_path spine_predictions
 ```
 ### Command for "Semantic Segmentation":
+Run the below command to start training the FCN model.
 ```
 python src/models/FCN_ResNet/main.py
 ```
@@ -124,3 +128,19 @@ python src/models/FCN_ResNet/main.py
 ```
 python src/models/FCN_ResNet/inference.py --model_path dendrite_model.pt --Validation_Folder Dataset/DeepD3_Validation/ --output_path dendrite_predictions
 ```
+
+## 3. Evaluation Metrics:
+Below are the evaluation metrics that are used for the evaluation of both models.
+<div align="center">
+
+| Metric     | FCN    | Mask RCNN |
+|------------|--------|-----------|
+| IoU        | 0.3996 | 0.2731    |
+| Precision  | 0.5808 | 0.3109    |
+| Recall     | 0.4350 | 0.6845    |
+
+</div>
+
+## Feedback
+
+If you have any feedback, please reach out to me at sahil.sharma@fau.de
