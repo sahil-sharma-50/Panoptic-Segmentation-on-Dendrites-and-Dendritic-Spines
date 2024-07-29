@@ -11,9 +11,6 @@ from utils import collate_fn
 from train import train_one_epoch, validate_one_epoch
 from checkpoint import load_checkpoint, save_checkpoint
 
-import warnings
-warnings.filterwarnings("ignore")
-
 # Set device
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 num_classes = 2  # Background and spine
@@ -63,7 +60,7 @@ for epoch in range(start_epoch, EPOCHS):
     avg_train_loss, train_loss_components = train_one_epoch(
         model, optimizer, train_loader, device, epoch, EPOCHS
     )
-    
+
     # Validate for one epoch
     avg_val_loss, val_loss_components = validate_one_epoch(
         model, val_loader, device, epoch, EPOCHS
@@ -107,4 +104,3 @@ for epoch in range(start_epoch, EPOCHS):
         val_loss_components,
         EPOCHS,
     )
-

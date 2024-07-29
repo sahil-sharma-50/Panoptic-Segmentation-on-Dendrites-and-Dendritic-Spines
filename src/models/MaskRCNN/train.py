@@ -1,6 +1,8 @@
 import torch
 import tqdm
+
 from utils import collate_fn, compute_loss
+
 
 def train_one_epoch(model, optimizer, data_loader, device, epoch, num_epochs):
     """
@@ -22,9 +24,11 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, num_epochs):
     train_epoch_loss = 0
     # Printing below loss seperately for better understanding
     loss_components = {"loss_box_reg": 0, "loss_classifier": 0, "loss_mask": 0}
-    
+
     # Create a progress bar for tracking training progress
-    progress_bar = tqdm.tqdm(data_loader, desc=f"Epoch {epoch+1}/{num_epochs} - Training")
+    progress_bar = tqdm.tqdm(
+        data_loader, desc=f"Epoch {epoch+1}/{num_epochs} - Training"
+    )
 
     for images, targets in progress_bar:
         # images (list) : List of images
@@ -42,7 +46,7 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, num_epochs):
 
         # Accumulate losses
         train_epoch_loss += losses.item()
-        
+
         for k in loss_components.keys():
             if k in loss_dict:
                 loss_components[k] += loss_dict[k].item()
@@ -53,6 +57,7 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, num_epochs):
     num_batches = len(data_loader)
     avg_loss_components = {k: v / num_batches for k, v in loss_components.items()}
     return train_epoch_loss / num_batches, avg_loss_components
+
 
 def validate_one_epoch(model, data_loader, device, epoch, num_epochs):
     """
@@ -73,9 +78,11 @@ def validate_one_epoch(model, data_loader, device, epoch, num_epochs):
     val_epoch_loss = 0
     # Printing below loss seperately for better understanding
     loss_components = {"loss_box_reg": 0, "loss_classifier": 0, "loss_mask": 0}
-    
+
     # Create a progress bar for tracking validation progress
-    val_progress_bar = tqdm.tqdm(data_loader, desc=f"Epoch {epoch+1}/{num_epochs} - Validation")
+    val_progress_bar = tqdm.tqdm(
+        data_loader, desc=f"Epoch {epoch+1}/{num_epochs} - Validation"
+    )
 
     with torch.no_grad():  # Disable gradient computation
         for images, targets in val_progress_bar:
@@ -97,4 +104,3 @@ def validate_one_epoch(model, data_loader, device, epoch, num_epochs):
     num_batches = len(data_loader)
     avg_loss_components = {k: v / num_batches for k, v in loss_components.items()}
     return val_epoch_loss / num_batches, avg_loss_components
-

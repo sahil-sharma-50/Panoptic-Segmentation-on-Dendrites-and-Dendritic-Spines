@@ -22,7 +22,7 @@ def save_checkpoint(
 ):
     """
     Saves the model and optimizer states, and logs the losses and loss components.
-    
+
     Parameters:
     - model (torch.nn.Module): The model to save state_dict from.
     - optimizer (torch.optim.Optimizer): The optimizer to save state_dict from.
@@ -36,7 +36,7 @@ def save_checkpoint(
     """
     # Create checkpoint directory if it does not exist
     os.makedirs(CHECKPOINT_DIR, exist_ok=True)
-    
+
     # Save model and optimizer states
     torch.save(
         {
@@ -47,7 +47,7 @@ def save_checkpoint(
         },
         CHECKPOINT_PATH,
     )
-    
+
     # Save training and validation losses
     np.savez(LOSS_PATH, train_losses=train_losses, val_losses=val_losses)
 
@@ -74,11 +74,11 @@ def save_checkpoint(
 def load_checkpoint(model, optimizer):
     """
     Loads the model and optimizer states from the checkpoint if available.
-    
+
     Parameters:
     - model (torch.nn.Module): The model to load state_dict into.
     - optimizer (torch.optim.Optimizer): The optimizer to load state_dict into.
-    
+
     Returns:
     - start_epoch (int): The epoch to resume training from.
     - best_val_loss (float): The best validation loss recorded.
@@ -105,4 +105,3 @@ def load_checkpoint(model, optimizer):
             val_losses.extend(loaded_losses["val_losses"].tolist())
 
     return start_epoch, best_val_loss, train_losses, val_losses
-

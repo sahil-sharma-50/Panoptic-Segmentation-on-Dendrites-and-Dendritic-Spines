@@ -1,4 +1,5 @@
 import os
+import cv2
 import argparse
 import torch
 from tqdm import tqdm
@@ -7,8 +8,8 @@ from torchvision.transforms import functional as F
 from PIL import Image
 from albumentations import Compose, Normalize
 from albumentations.pytorch import ToTensorV2
+
 from model import get_model_instance_segmentation
-import cv2
 
 
 def load_model(model_path, num_classes, device):
@@ -42,10 +43,9 @@ def preprocess_image(image_path, device):
     - img_tensor (torch.Tensor): Preprocessed image tensor.
     """
     # Define the transformation pipeline for inference
-    transform = Compose([
-        Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-        ToTensorV2()
-    ])
+    transform = Compose(
+        [Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)), ToTensorV2()]
+    )
 
     # Load and preprocess the input image using Albumentations
     img = Image.open(image_path).convert("RGB")
@@ -78,7 +78,9 @@ def run_inference(model, device, image_path, threshold=0.5):
 
     # Process the predictions
     pred_boxes = prediction[0]["boxes"].cpu().numpy()
-    pred_scores = prediction[0]["scores"].cpu().numpy() # Model's confidence for each prediction
+    pred_scores = (
+        prediction[0]["scores"].cpu().numpy()
+    )  # Model's confidence for each prediction
     pred_masks = prediction[0]["masks"].cpu().numpy()
 
     # Filter predictions by threshold
@@ -110,7 +112,7 @@ def visualize_results(img, boxes, masks, scores, threshold=0.5):
             xmin, ymin, xmax, ymax = box.astype(int)
             # Draw the bounding box
             cv2.rectangle(img_np, (xmin, ymin), (xmax, ymax), (255, 0, 0), 2)
-            # Apply the mask on i-th prediction and 0-th channel (single-channel masks) 
+            # Apply the mask on i-th prediction and 0-th channel (single-channel masks)
             mask = masks[i, 0] > 0
             img_np[mask] = [255, 0, 0]  # Red color for mask
 
@@ -147,9 +149,6 @@ def main():
     # Load the model
     model = load_model(args.model_path, num_classes, device)
 
-    # Initialize lists for storing results
-    predictions_list = []
-
     # Prepare input and output folders
     input_folder = os.path.join(args.Validation_Folder, "input_images")
     output_folder = args.output_path
@@ -164,12 +163,9 @@ def main():
         img = Image.open(image_path).convert("RGB")
 
         # Run inference
-        boxes, masks, scores = run_inference(
-            model, device, image_path, threshold=0.5
-        )
+        boxes, masks, scores = run_inference(model, device, image_path, threshold=0.5)
         # Visualize and save results
         predicted_mask = visualize_results(img, boxes, masks, scores, threshold=0.5)
-        predictions_list.append(predicted_mask)
 
         # Save prediction mask
         predicted_mask.save(os.path.join(output_folder, f"pred_{input_image_name}"))
@@ -177,4 +173,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

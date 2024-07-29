@@ -1,6 +1,5 @@
 def collate_fn(batch):
     """
-    Custom collate function for PyTorch DataLoader.
     This function is used to combine a list of samples into a single batch.
 
     Parameters:
